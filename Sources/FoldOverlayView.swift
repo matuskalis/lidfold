@@ -3,11 +3,11 @@ import AppKit
 /// The iPhone Duo fold: the desktop swings away about the hinge as the lid closes, foreshortening
 /// into a trapezoid while black void opens behind it. Progressive blur and darkening ride on top.
 final class FoldOverlayView: NSView {
-    private static let maxBlurRadius = 72.0
+    private static let maxBlurRadius = 96.0
     /// Viewing distance in points. Shorter means a harder perspective and more void.
-    private static let eyeDistance = Double(ProcessInfo.processInfo.environment["LIDFOLD_EYE_Z"] ?? "") ?? 1500.0
+    private static let eyeDistance = Double(ProcessInfo.processInfo.environment["LIDFOLD_EYE_Z"] ?? "") ?? 3000.0
     /// How much of the lid's travel the content swings through, as a multiple of the real tilt.
-    private static let swing = Double(ProcessInfo.processInfo.environment["LIDFOLD_SWING"] ?? "") ?? 1.0
+    private static let swing = Double(ProcessInfo.processInfo.environment["LIDFOLD_SWING"] ?? "") ?? 0.55
 
     private let content = CALayer()
     private let dark = CAGradientLayer()
@@ -76,19 +76,22 @@ final class FoldOverlayView: NSView {
     ///   - tiltDegrees: how far the lid has closed past the arming angle.
     func update(progress: Double, tiltDegrees: Double) {
         let motion = progress * progress * (3 - 2 * progress)
+        // Frost leads the geometry: it is the first thing the eye reads, and the fold looks
+        // empty if the picture is still crisp once the panel has visibly moved.
+        let frost = pow(progress, 0.7)
 
         let transform = Self.standingTransform(tiltDegrees: tiltDegrees, panelHeight: bounds.height)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         content.transform = transform
-        blur?.setValue(Self.maxBlurRadius * motion, forKey: "inputRadius")
+        blur?.setValue(Self.maxBlurRadius * frost, forKey: "inputRadius")
 
         dark.colors = (0..<6).map { step in
             let fromHinge = 1 - Double(step) * 0.2
             let gradient = max(0, min(1, (fromHinge - 0.2) / 0.8))
             let effect = motion * pow(gradient, 1.35)
-            return NSColor.black.withAlphaComponent(min(1, effect * 2)).cgColor
+            return NSColor.black.withAlphaComponent(min(1, effect * 1.5)).cgColor
         }
 
         glass.opacity = Float(0.20 * motion)

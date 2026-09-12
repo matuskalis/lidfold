@@ -26,8 +26,8 @@ LIDFOLD_ARM=130 LIDFOLD_PROGRESS=0.6 LIDFOLD_TILT=60 /Applications/LidFold.app/C
 
 `LIDFOLD_ARM`, `LIDFOLD_DISARM`, `LIDFOLD_TILT`, `LIDFOLD_PROGRESS` pin the thresholds and the
 fold amount so the look can be screenshotted without touching the lid. `LIDFOLD_EYE_Z` (default
-1500) sets the viewing distance in points — shorter means harder perspective and more void —
-and `LIDFOLD_SWING` (default 1.0) scales how far the content swings per degree of lid travel.
+3000) sets the viewing distance in points — shorter means harder perspective and more void —
+and `LIDFOLD_SWING` (default 0.55) scales how far the content swings per degree of lid travel.
 
 ## Credit
 
