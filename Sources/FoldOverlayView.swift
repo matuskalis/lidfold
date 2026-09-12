@@ -1,13 +1,13 @@
 import AppKit
 
-/// The iPhone Duo fold: the desktop stays standing in space at the angle where the fold armed
-/// while the panel closes away from it. The panel is a window onto that standing image, so the
-/// content counter-rotates against the lid — which reads as magnification toward the hinge plus
-/// keystone widening at the far edge. Progressive blur and darkening ride on top.
+/// The iPhone Duo fold: the desktop swings away about the hinge as the lid closes, foreshortening
+/// into a trapezoid while black void opens behind it. Progressive blur and darkening ride on top.
 final class FoldOverlayView: NSView {
     private static let maxBlurRadius = 72.0
-    private static let eyeDistance = Double(ProcessInfo.processInfo.environment["LIDFOLD_EYE"] ?? "") ?? 2200.0
-    private static let tiltSign = Double(ProcessInfo.processInfo.environment["LIDFOLD_TILT_SIGN"] ?? "1") ?? 1
+    /// Viewing distance in points. Shorter means a harder perspective and more void.
+    private static let eyeDistance = Double(ProcessInfo.processInfo.environment["LIDFOLD_EYE_Z"] ?? "") ?? 1500.0
+    /// How much of the lid's travel the content swings through, as a multiple of the real tilt.
+    private static let swing = Double(ProcessInfo.processInfo.environment["LIDFOLD_SWING"] ?? "") ?? 1.0
 
     private let content = CALayer()
     private let dark = CAGradientLayer()
@@ -77,13 +77,7 @@ final class FoldOverlayView: NSView {
     func update(progress: Double, tiltDegrees: Double) {
         let motion = progress * progress * (3 - 2 * progress)
 
-        var transform = CATransform3DIdentity
-        transform.m34 = -1 / Self.eyeDistance
-        transform = CATransform3DRotate(
-            transform,
-            CGFloat(Self.tiltSign * tiltDegrees * .pi / 180),
-            1, 0, 0
-        )
+        let transform = Self.standingTransform(tiltDegrees: tiltDegrees, panelHeight: bounds.height)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -100,6 +94,18 @@ final class FoldOverlayView: NSView {
         glass.opacity = Float(0.20 * motion)
         reflection.opacity = Float(0.06 * motion)
         CATransaction.commit()
+    }
+
+    /// Swings the content away about the hinge, exactly as the lid moves, under a fixed camera.
+    /// The far edge foreshortens toward the vanishing point and black void opens behind it.
+    private static func standingTransform(tiltDegrees: Double, panelHeight: CGFloat) -> CATransform3D {
+        var transform = CATransform3DIdentity
+        transform.m34 = -1 / CGFloat(eyeDistance)
+        return CATransform3DRotate(
+            transform,
+            CGFloat(-swing * tiltDegrees * .pi / 180),
+            1, 0, 0
+        )
     }
 
     private static func makeVariableBlur() -> NSObject? {

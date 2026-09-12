@@ -75,9 +75,11 @@ bottom of the display and 1 at the top; `motion = smoothstep(0, 1, progress)`.
 | glass tint | `rgb(0.82, 0.85, 0.86)` at `0.20 * motion`, soft light |
 | reflection | narrow band at `fromHinge ≈ 0.65`, `0.06 * motion` |
 
-Apple keeps the content in a fixed front-view projection — the device half rotates, the picture
-does not tip in 3D. An earlier version used `rotation3DEffect` and read as a tilting screenshot;
-that is macTilt's reading, not Apple's.
+The content swings away about the hinge under a fixed camera, foreshortening into a trapezoid
+while black void opens behind it. Two earlier readings were wrong: a pure blur sweep with no
+geometry, and a "standing content" homography that magnified the desktop to keep it fixed in
+space. The giveaway is the void — Apple's transition opens black space as the half recedes, so the
+content must get smaller, not larger.
 
 Real variable-radius blur over the live desktop comes from the private `CABackdropLayer` plus
 `CAFilter` `gaussianBlur` with `inputRadius` set per band through
