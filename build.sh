@@ -17,7 +17,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 swiftc -O \
     -target arm64-apple-macos14.0 \
     -parse-as-library \
-    Sources/*.swift \
+    Sources/*.swift Sources/LidFoldCore/*.swift \
     -o "$APP/Contents/MacOS/LidFold"
 
 cp Info.plist "$APP/Contents/Info.plist"

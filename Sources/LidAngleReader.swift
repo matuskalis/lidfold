@@ -11,9 +11,7 @@ final class LidAngleReader {
     private var device: IOHIDDevice?
     private var timer: DispatchSourceTimer?
     private let queue = DispatchQueue(label: "com.matuskalis.lidfold.sensor", qos: .userInteractive)
-    private var smoothed: Double?
-    private var lastGoodRead = Date.distantPast
-    private var tickCount = 0
+    private var filter = AngleFilter()
 
     func start() {
         queue.async { [weak self] in
@@ -35,20 +33,13 @@ final class LidAngleReader {
     }
 
     private func tick() {
-        tickCount += 1
-        if let current = smoothed, current > 90, tickCount % 6 != 0 { return }
-        let raw = device.flatMap(Self.readAngle)
-        let now = Date()
-        if let raw {
-            lastGoodRead = now
-            smoothed = smoothed.map { $0 + 0.4 * (raw - $0) } ?? raw
-        }
-        let value = smoothed
-        let stale = now.timeIntervalSince(lastGoodRead) > 0.5
+        guard filter.shouldPoll() else { return }
+        let now = ProcessInfo.processInfo.systemUptime
+        let reading = filter.ingest(device.flatMap(Self.readAngle), at: now)
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.angle = value
-            self.isStale = stale
+            self.angle = reading.angle
+            self.isStale = reading.isStale
         }
     }
 
@@ -70,10 +61,10 @@ final class LidAngleReader {
     }
 
     private static func readAngle(_ device: IOHIDDevice) -> Double? {
-        var report = [UInt8](repeating: 0, count: 3)
+        var report = [UInt8](repeating: 0, count: LidSensorReport.length)
         var length = report.count
         let result = IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, 1, &report, &length)
-        guard result == kIOReturnSuccess, length >= 3 else { return nil }
-        return Double((UInt16(report[1]) | UInt16(report[2]) << 8) & 0x1FF)
+        guard result == kIOReturnSuccess else { return nil }
+        return LidSensorReport.angle(from: Array(report.prefix(length)))
     }
 }

@@ -14,12 +14,7 @@ func lidLog(_ message: String) {
 
 @MainActor
 final class FoldController {
-    static let armBelow = Double(ProcessInfo.processInfo.environment["LIDFOLD_ARM"] ?? "") ?? 88.0
-    static let disarmAbove = Double(ProcessInfo.processInfo.environment["LIDFOLD_DISARM"] ?? "") ?? 90.0
-    static let closedAngle = 5.0
-    static let minVisibleAngle = 3.0
-    static let progressOverride = ProcessInfo.processInfo.environment["LIDFOLD_PROGRESS"].flatMap(Double.init)
-    static let tiltOverride = ProcessInfo.processInfo.environment["LIDFOLD_TILT"].flatMap(Double.init)
+    static let configuration = FoldConfiguration.current
 
     let reader = LidAngleReader()
     private let freezer = ScreenFreezer()
@@ -52,7 +47,7 @@ final class FoldController {
             disarm()
             return
         }
-        if angle > Self.disarmAbove || angle < Self.minVisibleAngle {
+        guard case let .fold(progress, tilt) = FoldModel.presentation(angle: angle, configuration: Self.configuration) else {
             disarm()
             return
         }
@@ -60,10 +55,6 @@ final class FoldController {
             disarm()
             return
         }
-
-        let tracked = min(max((Self.armBelow - angle) / (Self.armBelow - Self.closedAngle), 0), 1)
-        let progress = Self.progressOverride ?? tracked
-        let tilt = Self.tiltOverride ?? max(0, Self.armBelow - angle)
         guard let frozen else {
             arm()
             return
