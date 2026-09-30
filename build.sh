@@ -9,6 +9,16 @@ if [ "${1:-}" = "spike" ]; then
     exit 0
 fi
 
+if [ "${1:-}" = "render" ]; then
+    swiftc -O \
+        -target arm64-apple-macos14.0 \
+        -parse-as-library \
+        Sources/LidFoldCore/*.swift Sources/FoldOverlayView.swift Tools/render.swift \
+        -o build/render
+    echo "built build/render"
+    exit 0
+fi
+
 APP="build/LidFold.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
