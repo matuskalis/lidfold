@@ -19,7 +19,7 @@ final class LidAngleReader {
         queue.async { [weak self] in
             guard let self, self.timer == nil else { return }
             if self.simulation != nil {
-                self.simulationStart = ProcessInfo.processInfo.systemUptime
+                self.simulationStart = Date().timeIntervalSinceReferenceDate
                 NSLog("LidFold sensor simulated")
             } else {
                 let opened = Self.openSensor()
@@ -41,7 +41,7 @@ final class LidAngleReader {
 
     private func tick() {
         guard filter.shouldPoll() else { return }
-        let now = ProcessInfo.processInfo.systemUptime
+        let now = Date().timeIntervalSinceReferenceDate
         let raw = simulation.map { $0.angle(at: now - simulationStart) } ?? device.flatMap(Self.readAngle)
         let reading = filter.ingest(raw, at: now)
         DispatchQueue.main.async { [weak self] in

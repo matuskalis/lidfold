@@ -34,7 +34,8 @@ struct AngleFilter {
         return true
     }
 
-    /// Feed the decoded angle, or nil when the read failed. `time` is monotonic seconds.
+    /// Feed the decoded angle, or nil when the read failed. `time` is seconds on a clock that keeps counting
+    /// through sleep, so waking a machine after a long nap reads as a sensor that went quiet.
     mutating func ingest(_ raw: Double?, at time: Double) -> (angle: Double?, isStale: Bool) {
         if let raw {
             lastGoodRead = time
