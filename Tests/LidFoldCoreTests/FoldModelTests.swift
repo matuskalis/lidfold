@@ -107,12 +107,13 @@ final class FoldConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.eyeDistance, 3000)
         XCTAssertEqual(configuration.swing, 0.55)
         XCTAssertNil(configuration.progressOverride)
+        XCTAssertNil(configuration.simulation)
     }
 
     func testReadsEveryDocumentedVariable() {
         let configuration = FoldConfiguration(environment: [
             "LIDFOLD_ARM": "120", "LIDFOLD_DISARM": "125", "LIDFOLD_PROGRESS": "0.25", "LIDFOLD_TILT": "30",
-            "LIDFOLD_EYE_Z": "1500", "LIDFOLD_SWING": "0.8",
+            "LIDFOLD_EYE_Z": "1500", "LIDFOLD_SWING": "0.8", "LIDFOLD_SIMULATE": "100:5:3",
         ])
         XCTAssertEqual(configuration.armBelow, 120)
         XCTAssertEqual(configuration.disarmAbove, 125)
@@ -120,11 +121,12 @@ final class FoldConfigurationTests: XCTestCase {
         XCTAssertEqual(configuration.tiltOverride, 30)
         XCTAssertEqual(configuration.eyeDistance, 1500)
         XCTAssertEqual(configuration.swing, 0.8)
+        XCTAssertEqual(configuration.simulation?.sweepSeconds, 3)
     }
 
     func testUnparseableValuesFallBackToDefaults() {
         let configuration = FoldConfiguration(environment: [
-            "LIDFOLD_ARM": "steep", "LIDFOLD_PROGRESS": "",
+            "LIDFOLD_ARM": "steep", "LIDFOLD_PROGRESS": "", "LIDFOLD_SIMULATE": "fast",
         ])
         XCTAssertEqual(configuration, FoldConfiguration())
     }

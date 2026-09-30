@@ -32,6 +32,7 @@ final class FoldController {
     }
 
     var angle: Double? { reader.angle }
+    var isSimulated: Bool { reader.simulation != nil }
 
     func start() {
         reader.start()

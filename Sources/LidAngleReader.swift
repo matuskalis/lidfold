@@ -6,23 +6,30 @@ import Observation
 final class LidAngleReader {
     private(set) var angle: Double?
     private(set) var isStale = true
+    let simulation = FoldConfiguration.current.simulation
 
     private var manager: IOHIDManager?
     private var device: IOHIDDevice?
     private var timer: DispatchSourceTimer?
     private let queue = DispatchQueue(label: "com.matuskalis.lidfold.sensor", qos: .userInteractive)
     private var filter = AngleFilter()
+    private var simulationStart = 0.0
 
     func start() {
         queue.async { [weak self] in
-            guard let self, self.device == nil else { return }
-            let opened = Self.openSensor()
-            self.manager = opened?.manager
-            self.device = opened?.device
-            NSLog("LidFold sensor open: %@", self.device != nil ? "ok" : "failed")
-            guard self.device != nil else {
-                DispatchQueue.main.async { self.isStale = true }
-                return
+            guard let self, self.timer == nil else { return }
+            if self.simulation != nil {
+                self.simulationStart = ProcessInfo.processInfo.systemUptime
+                NSLog("LidFold sensor simulated")
+            } else {
+                let opened = Self.openSensor()
+                self.manager = opened?.manager
+                self.device = opened?.device
+                NSLog("LidFold sensor open: %@", self.device != nil ? "ok" : "failed")
+                guard self.device != nil else {
+                    DispatchQueue.main.async { self.isStale = true }
+                    return
+                }
             }
             let timer = DispatchSource.makeTimerSource(queue: self.queue)
             timer.schedule(deadline: .now(), repeating: .milliseconds(16), leeway: .milliseconds(2))
@@ -35,7 +42,8 @@ final class LidAngleReader {
     private func tick() {
         guard filter.shouldPoll() else { return }
         let now = ProcessInfo.processInfo.systemUptime
-        let reading = filter.ingest(device.flatMap(Self.readAngle), at: now)
+        let raw = simulation.map { $0.angle(at: now - simulationStart) } ?? device.flatMap(Self.readAngle)
+        let reading = filter.ingest(raw, at: now)
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.angle = reading.angle

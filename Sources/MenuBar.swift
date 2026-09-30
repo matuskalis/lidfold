@@ -29,7 +29,7 @@ final class MenuBar: NSObject, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         if let angle = controller.angle {
-            angleItem.title = String(format: "Lid angle: %.1f°", angle)
+            angleItem.title = String(format: "Lid angle: %.1f°", angle) + (controller.isSimulated ? " (simulated)" : "")
         } else {
             angleItem.title = "Lid angle sensor not found"
         }

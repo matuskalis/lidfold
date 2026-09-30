@@ -17,6 +17,7 @@ struct FoldConfiguration: Equatable {
     var eyeDistance = 3000.0
     /// How far the content swings per degree of lid travel.
     var swing = 0.55
+    var simulation: AngleSimulation?
 
     init() {}
 
@@ -28,6 +29,7 @@ struct FoldConfiguration: Equatable {
         tiltOverride = number("LIDFOLD_TILT")
         eyeDistance = number("LIDFOLD_EYE_Z") ?? eyeDistance
         swing = number("LIDFOLD_SWING") ?? swing
+        simulation = environment["LIDFOLD_SIMULATE"].flatMap(AngleSimulation.init(specification:))
     }
 
     static let current = FoldConfiguration(environment: ProcessInfo.processInfo.environment)
