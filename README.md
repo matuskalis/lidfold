@@ -158,9 +158,10 @@ other heavy work, so the tails are pessimistic.
 - Verified on one machine, a MacBookPro18,1 on macOS 27.0: sensor read, all tests, the offscreen render and
   the build. The tests, the builds and `build/render --verify` (0.6 px again) also pass on GitHub's macOS 15 and
   macOS 26 runners, so the private blur filter resolves there too.
-- **Not verified in this pass:** the live overlay (ScreenCaptureKit freeze, full-screen window, real lid). It was
-  last run by the author on macOS 26.5.2 on 11 Sep 2026; `docs/measurements.md` shows his log and the test
-  that replays it. Running it now would cover the display and needs Screen Recording.
+- **Not verified in this pass:** the live overlay (ScreenCaptureKit freeze, full-screen window, real lid). The
+  author ran it on macOS 26.5.2 (per CLAUDE.md). His app log, `~/Library/Logs/lidfold.log`, has overlay lines
+  from 11 to 13 Sep 2026, and a unit test replays 24 of them; the log says nothing about how the lid was moved.
+  Running the overlay now would cover the display and needs Screen Recording.
 - Not verified: other MacBook models, the sensor's step size by motion, and the lid-to-glass latency.
 - There is no signing identity, so every build is ad-hoc signed and a launch from Finder or launchd is a new
   app to macOS each time. That is why `run.sh` exists. When a capture fails the app retries every 5 s and can
@@ -174,9 +175,10 @@ swift test                              # 47 tests, about 0.01 s
 ```
 
 The tests cover the report decode, the smoothing and its step response, the stale flag and the poll throttle,
-the angle to fold mapping (including seven lines replayed from a real close), each fold curve against values
-computed by hand, the blur mask, the silhouette, the scripted lid, and a scripted close run end to end through
-the filter and the decision. CI runs the same commands on macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
+the angle to fold mapping (including 24 angle and progress pairs copied unchanged from the app's own log on the
+author's machine), each fold curve against values computed by hand, the blur mask, the silhouette, the scripted
+lid, and a scripted close run end to end through the filter and the decision. CI runs the same commands on
+macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
 
 | Tool | What it does |
 |---|---|

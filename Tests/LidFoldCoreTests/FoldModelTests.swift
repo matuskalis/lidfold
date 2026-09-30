@@ -60,20 +60,45 @@ final class FoldPresentationTests: XCTestCase {
         XCTAssertEqual(last, 1)
     }
 
-    func testReproducesTheProgressLoggedDuringRealCloses() {
-        // "overlay shown at angle <filtered angle> progress <progress>" lines from ~/Library/Logs/lidfold.log,
-        // written by the app on 11 Sep 2026 while a lid was being closed by hand.
-        let logged: [(angle: Double, progress: Double)] = [
-            (79.28377468577379, 0.1050147628220025),
-            (82.36284323075168, 0.06791755143672676),
-            (82.89203692304005, 0.061541723818794546),
-            (78.86901891168226, 0.11001182034117758),
-            (36.40022154148321, 0.6216840778134552),
-            (12.5998135296, 0.9084359815710844),
-            (71.669074219008, 0.1967581419396627),
-        ]
-        for entry in logged {
-            XCTAssertEqual(fold(entry.angle)?.progress ?? -1, entry.progress, accuracy: 1e-15, "angle \(entry.angle)")
+    /// Lines the app wrote to ~/Library/Logs/lidfold.log on the author's machine, copied unchanged. That log
+    /// has 34 "overlay shown" lines from 11 to 13 Sep 2026. These are the 24 that follow the fold mapping; the
+    /// other ten come from dev runs with LIDFOLD_PROGRESS pinned (angles 95 and 96, above the disarm angle).
+    private let appLogLines = """
+        2026-09-11T17:43:05Z overlay shown at angle 17.0 progress 0.8554216867469879
+        2026-09-12T09:27:41Z overlay shown at angle 33.99597471443399 progress 0.6506509070550122
+        2026-09-12T09:28:04Z overlay shown at angle 84.19932936192 progress 0.04579121250698803
+        2026-09-12T09:28:08Z overlay shown at angle 83.46997861260692 progress 0.05457857093244672
+        2026-09-12T09:28:10Z overlay shown at angle 80.39738427448233 progress 0.09159777982551405
+        2026-09-12T09:28:17Z overlay shown at angle 87.0896956896839 progress 0.010967521811037434
+        2026-09-12T09:39:04Z overlay shown at angle 82.76769786965932 progress 0.06303978470289981
+        2026-09-12T09:39:19Z overlay shown at angle 86.24940431353748 progress 0.02109151429472913
+        2026-09-12T11:08:28Z overlay shown at angle 23.166336525959167 progress 0.7811284755908534
+        2026-09-12T17:13:17Z overlay shown at angle 82.30633862233655 progress 0.06859832985136682
+        2026-09-12T20:45:14Z overlay shown at angle 85.877262336 progress 0.025575152578313238
+        2026-09-12T20:45:21Z overlay shown at angle 78.16379579796079 progress 0.11850848436191823
+        2026-09-12T20:45:24Z overlay shown at angle 80.54553216220347 progress 0.08981286551562083
+        2026-09-12T20:45:31Z overlay shown at angle 67.78757951488 progress 0.24352313837493983
+        2026-09-12T21:15:49Z overlay shown at angle 65.01294833760207 progress 0.27695242966744493
+        2026-09-12T21:21:22Z overlay shown at angle 82.513091584 progress 0.06610733031325308
+        2026-09-12T21:21:25Z overlay shown at angle 79.60821195980506 progress 0.10110588000234866
+        2026-09-12T21:21:27Z overlay shown at angle 81.37292847124068 progress 0.07984423528625682
+        2026-09-12T21:21:31Z overlay shown at angle 84.79046333751768 progress 0.03866911641544966
+        2026-09-12T21:21:43Z overlay shown at angle 75.22497896448017 progress 0.15391591609060035
+        2026-09-13T17:45:45Z overlay shown at angle 83.16947549376353 progress 0.058199090436584
+        2026-09-13T17:45:50Z overlay shown at angle 82.55221800015774 progress 0.06563592770894293
+        2026-09-13T17:45:53Z overlay shown at angle 75.90671009516228 progress 0.145702288010093
+        2026-09-13T19:34:25Z overlay shown at angle 84.28952754293913 progress 0.04470448743446836
+        """
+
+    func testReproducesTheProgressTheAppLoggedOnTheAuthorsMachine() throws {
+        let lines = appLogLines.split(separator: "\n")
+        XCTAssertEqual(lines.count, 24)
+        for line in lines {
+            // <timestamp> overlay shown at angle <filtered angle> progress <progress>
+            let words = line.split(separator: " ")
+            let angle = try XCTUnwrap(Double(words[5]), String(line))
+            let logged = try XCTUnwrap(Double(words[7]), String(line))
+            XCTAssertEqual(fold(angle)?.progress ?? -1, logged, accuracy: 1e-15, String(line))
         }
     }
 

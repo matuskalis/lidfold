@@ -93,19 +93,23 @@ silhouette cosine, a tilt clamp, the simulation hold boundary). Nine were caught
 `opening < 0` to `opening <= 0` in `AngleSimulation`, which returns the same value on both sides of the
 boundary, so it is not observable.
 
-## From a real run
+## From the app's own log
 
-The app's own log of 11 Sep 2026, macOS 26.5.2, written while a lid was closed by hand
-(`~/Library/Logs/lidfold.log`, filtered angle in degrees, then progress):
+`~/Library/Logs/lidfold.log` on the author's machine (37 lines, 11 to 17 Sep 2026) is where the app writes its
+`lidLog` messages. It holds 34 lines of the form `overlay shown at angle <filtered angle> progress <progress>`.
+24 of them follow the fold mapping exactly. The other ten were written by dev runs with `LIDFOLD_PROGRESS` pinned
+(progress 0.28 to 0.75 at angles 95 and 96, above the disarm angle), so they do not. Three of the 24:
 
 ```
-overlay shown at angle 79.28377468577379 progress 0.1050147628220025
-overlay shown at angle 36.40022154148321 progress 0.6216840778134552
-overlay shown at angle 12.5998135296 progress 0.9084359815710844
+2026-09-12T09:28:04Z overlay shown at angle 84.19932936192 progress 0.04579121250698803
+2026-09-12T11:08:28Z overlay shown at angle 23.166336525959167 progress 0.7811284755908534
+2026-09-13T19:34:25Z overlay shown at angle 84.28952754293913 progress 0.04470448743446836
 ```
 
-`FoldPresentationTests.testReproducesTheProgressLoggedDuringRealCloses` replays seven such lines through
-`FoldModel.presentation` and matches every one exactly. The fractional angles are the exponential average
+`FoldPresentationTests.testReproducesTheProgressTheAppLoggedOnTheAuthorsMachine` carries all 24 lines verbatim and
+matches each progress value to the last digit through `FoldModel.presentation`. The log lives in `~/Library/Logs`,
+not in the repository, so the test holds the lines itself, and every one of them can be found in the log with
+`grep -F`. What the log does not say is how the lid was moved. The fractional angles are the exponential average
 at work, not raw readings.
 
 ## CI
