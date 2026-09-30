@@ -10,7 +10,7 @@ lid angle, in the style of the iPhone Duo fold animation.
   (scripted lid). Unit tested.
 - `Sources/*.swift`: the app shell (IOKit read, ScreenCaptureKit freeze, overlay window and view, menu bar).
 - `Tools/`: `spike.swift` (sensor probe), `render.swift` (offscreen renderer), `standin/` (generated stand-in
-  desktop), `hero.sh` (regenerates `docs/` media).
+  desktop), `hero.sh` (regenerates `docs/` media), `check-refactor.sh` (pixel check against the pre-core view).
 - `Package.swift` exists only so `swift test` can build the core. `build.sh` compiles the same core files into
   the app with `swiftc`. Core types stay `internal`; the tests use `@testable import`.
 
@@ -132,6 +132,7 @@ overlay still needs Screen Recording, so use `Tools/render.swift` when you only 
 ./build.sh render     # build/render: offscreen frames, --verify, --bench, --table
 swift test            # the core's unit tests
 Tools/hero.sh         # regenerate docs/lidfold.webp and the stills (needs img2webp)
+Tools/check-refactor.sh  # today's overlay view against commit 78f7bae's, byte for byte (needs full history)
 ```
 
 `run.sh` runs `build/LidFold.app` when it exists, otherwise the installed copy.

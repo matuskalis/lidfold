@@ -75,10 +75,12 @@ column is `FoldModel.silhouette`, plain trigonometry on the constants in `FoldCo
 
 ## Refactor equivalence
 
-Before the maths moved into `LidFoldCore`, the original `FoldOverlayView` and the refactored one were built
-into the same renderer and asked for eight lid angles (87, 75, 60, 45, 30, 15, 5, 4 degrees) over a test
-pattern. The PNG files were byte-identical in all eight. This check is not in the repository because it
-needs the old file from history.
+`Tools/check-refactor.sh` builds the overlay view as it was before the maths moved into `LidFoldCore` (commit
+78f7bae, read from git history) and as it is now, draws eight lid angles (87, 75, 60, 45, 30, 15, 5 and 4
+degrees) over `Tools/standin/desktop.jpg` with each, and compares the PNG files byte for byte. On the test machine
+all eight were identical. An earlier run of the same comparison over a synthetic test pattern was identical at
+the same angles too. The script needs the full git history. It does fail when it should: with the darkness gain
+changed from 1.5 to 2.0 all eight frames differed.
 
 ## Tests and build
 

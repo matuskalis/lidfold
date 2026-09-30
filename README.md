@@ -185,6 +185,7 @@ macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
 | `build/spike [seconds]` | Reads the sensor like the app does, prints each change, then the rate and the read latency. |
 | `build/render` | Draws the real overlay view offscreen: `--angles`, `--simulate`, `--verify`, `--bench`, `--table`. |
 | `Tools/hero.sh` | Regenerates the media in `docs/` from `Tools/standin/desktop.jpg`. |
+| `Tools/check-refactor.sh` | Draws eight lid angles with the overlay view from before the core was extracted (commit 78f7bae) and with today's, and compares the PNGs byte for byte. Needs the full git history. |
 
 `CLAUDE.md` holds the field notes: the traps that each cost a rebuild, the dev overrides and the layout.
 
