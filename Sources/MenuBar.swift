@@ -5,7 +5,7 @@ import ServiceManagement
 final class MenuBar: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let controller: FoldController
-    private let angleItem = NSMenuItem(title: "Lid angle: —", action: nil, keyEquivalent: "")
+    private let angleItem = NSMenuItem(title: "Lid angle: n/a", action: nil, keyEquivalent: "")
     private let enabledItem = NSMenuItem(title: "Enabled", action: #selector(toggleEnabled), keyEquivalent: "")
     private let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLogin), keyEquivalent: "")
 
@@ -29,7 +29,7 @@ final class MenuBar: NSObject, NSMenuDelegate {
 
     func menuWillOpen(_ menu: NSMenu) {
         if let angle = controller.angle {
-            angleItem.title = String(format: "Lid angle: %.1f°", angle)
+            angleItem.title = String(format: "Lid angle: %.1f°", angle) + (controller.isSimulated ? " (simulated)" : "")
         } else {
             angleItem.title = "Lid angle sensor not found"
         }

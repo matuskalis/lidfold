@@ -1,0 +1,206 @@
+<!doctype html>
+<!-- A generated stand-in for a screen capture, not a real desktop. Rendered in a headless browser at 1728x1117 with
+     device scale factor 2 and saved as desktop.jpg (ffmpeg -q:v 2 -pix_fmt yuvj444p). The code in the editor is an
+     excerpt of Sources/LidFoldCore/FoldModel.swift, the terminal shows real output of swift test and build/render --verify. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>LidFold stand-in desktop</title>
+<style>
+  :root {
+    --sys: -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
+    --mono: "SF Mono", ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1728px; height: 1117px; overflow: hidden; background: #0b1140; }
+  body {
+    position: relative; font-family: var(--sys); color: #1d1f24;
+    background:
+      radial-gradient(1300px 900px at 8% 108%, #10d6c4 0%, rgba(16,214,196,0) 62%),
+      radial-gradient(1000px 800px at 100% 0%, #ff4f8b 0%, rgba(255,79,139,0) 58%),
+      radial-gradient(1100px 900px at 58% 62%, #3b53ea 0%, rgba(59,83,234,0) 72%),
+      linear-gradient(158deg, #0a1242 0%, #18207a 52%, #2b1570 100%);
+  }
+  .menubar {
+    position: absolute; left: 0; top: 0; right: 0; height: 37px; padding: 0 18px;
+    display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; color: #0d0f14;
+    background: rgba(255,255,255,0.62); backdrop-filter: blur(24px) saturate(1.6);
+  }
+  .menubar b { font-weight: 700; }
+  .menubar .spacer { flex: 1; }
+  .menubar .clock { font-variant-numeric: tabular-nums; }
+  .glyph { width: 18px; height: 11px; border: 2px solid #0d0f14; border-radius: 3px; position: relative; }
+  .glyph::after { content: ""; position: absolute; right: -5px; top: 2px; width: 3px; height: 4px; background: #0d0f14; border-radius: 0 2px 2px 0; }
+  .window {
+    position: absolute; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 0 0 1px rgba(0,0,0,0.28), 0 28px 70px rgba(4,6,30,0.55), 0 8px 20px rgba(4,6,30,0.35);
+  }
+  .titlebar { height: 38px; display: flex; align-items: center; padding: 0 14px; gap: 8px; font-size: 13px; font-weight: 600; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .editor { left: 64px; top: 84px; width: 1120px; height: 822px; background: #fdfdfe; }
+  .editor .titlebar { background: #ececf1; color: #3a3d45; border-bottom: 1px solid #d5d6dc; }
+  .editor .titlebar span { margin-left: auto; margin-right: auto; transform: translateX(-42px); }
+  .editor .body { display: flex; height: calc(100% - 38px); }
+  .sidebar { width: 210px; background: #f0f1f5; border-right: 1px solid #dcdde3; padding: 14px 0; font-size: 13px; color: #2b2e36; }
+  .sidebar h4 { font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: #8a8e99; padding: 0 16px 8px; font-weight: 600; }
+  .sidebar div.row { padding: 4px 16px 4px 16px; white-space: nowrap; }
+  .sidebar div.row.in { padding-left: 32px; }
+  .sidebar div.row.in2 { padding-left: 48px; }
+  .sidebar div.row.sel { background: #c9d6fb; border-radius: 6px; margin: 0 8px; padding-left: 40px; }
+  .sidebar .folder::before { content: ""; display: inline-block; width: 13px; height: 10px; border-radius: 2px; background: #5b8def; margin-right: 8px; vertical-align: -1px; }
+  .sidebar .file::before { content: ""; display: inline-block; width: 10px; height: 12px; border-radius: 2px; background: #b9bdc8; margin-right: 8px; vertical-align: -2px; }
+  .sidebar .swift::before { background: #ff7a45; }
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .tabs { height: 34px; background: #f5f5f8; border-bottom: 1px solid #dcdde3; display: flex; font-size: 12.5px; }
+  .tab { padding: 0 18px; display: flex; align-items: center; color: #6b6f7b; border-right: 1px solid #dcdde3; }
+  .tab.on { background: #fdfdfe; color: #1d1f24; font-weight: 600; box-shadow: inset 0 2px 0 #3b6df0; }
+  .code { flex: 1; overflow: hidden; padding: 12px 0; font-family: var(--mono); font-size: 13.5px; line-height: 21px; }
+  .line { display: flex; white-space: pre; }
+  .num { width: 54px; flex: none; text-align: right; padding-right: 18px; color: #a2a6b2; }
+  .kw { color: #9b2393; font-weight: 600; }
+  .ty { color: #0b4f79; }
+  .nm { color: #1c00cf; }
+  .cm { color: #5d6c79; }
+  .fn { color: #326d74; }
+  .cur { background: #eef3ff; }
+  .term { left: 1070px; top: 560px; width: 640px; height: 372px; background: #171a21; }
+  .term .titlebar { background: #262a33; color: #c9ced9; border-bottom: 1px solid #0d0f14; }
+  .term .titlebar span { margin-left: auto; margin-right: auto; transform: translateX(-42px); font-weight: 500; }
+  .term pre { font-family: var(--mono); font-size: 13px; line-height: 20px; color: #d9dde6; padding: 14px 18px; white-space: pre; overflow: hidden; height: calc(100% - 38px); }
+  .term .p { color: #6fe3a0; } .term .d { color: #7d8597; } .term .o { color: #ffd479; } .term .g { color: #6fe3a0; }
+  .dock {
+    position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); height: 88px; padding: 11px 14px;
+    display: flex; gap: 14px; border-radius: 26px; background: rgba(255,255,255,0.3);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.42), 0 14px 40px rgba(4,6,30,0.4); backdrop-filter: blur(26px) saturate(1.5);
+  }
+  .app { width: 66px; height: 66px; border-radius: 16px; position: relative; box-shadow: 0 2px 6px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.3); }
+  .app i { position: absolute; background: rgba(255,255,255,0.92); }
+</style>
+</head>
+<body>
+  <div class="menubar">
+    <b>Editor</b><span>File</span><span>Edit</span><span>View</span><span>Go</span><span>Window</span><span>Help</span>
+    <div class="spacer"></div>
+    <div class="glyph"></div><span>Tue 30 Sep</span><span class="clock">19:14</span>
+  </div>
+
+  <div class="window editor">
+    <div class="titlebar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><span>LidFold</span></div>
+    <div class="body">
+      <div class="sidebar">
+        <h4>lidfold</h4>
+        <div class="row folder">Sources</div>
+        <div class="row in folder">LidFoldCore</div>
+        <div class="row sel file swift" style="font-weight:600">FoldModel.swift</div>
+        <div class="row in2 file swift">LidSensor.swift</div>
+        <div class="row in2 file swift">AngleSimulation.swift</div>
+        <div class="row in file swift">FoldController.swift</div>
+        <div class="row in file swift">FoldOverlayView.swift</div>
+        <div class="row in file swift">LidAngleReader.swift</div>
+        <div class="row in file swift">ScreenFreezer.swift</div>
+        <div class="row folder">Tests</div>
+        <div class="row in folder">LidFoldCoreTests</div>
+        <div class="row folder">Tools</div>
+        <div class="row in file swift">render.swift</div>
+        <div class="row in file swift">spike.swift</div>
+        <div class="row file">build.sh</div>
+        <div class="row file">Package.swift</div>
+        <div class="row file">README.md</div>
+      </div>
+      <div class="main">
+        <div class="tabs"><div class="tab">LidSensor.swift</div><div class="tab on">FoldModel.swift</div><div class="tab">FoldOverlayView.swift</div></div>
+        <div class="code" id="code"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="window term">
+    <div class="titlebar"><div class="dot" style="background:#ff5f57"></div><div class="dot" style="background:#febc2e"></div><div class="dot" style="background:#28c840"></div><span>lidfold: zsh</span></div>
+    <pre id="term"><span class="d">~/projects/lidfold</span>  <span class="o">main</span>
+<span class="p">❯</span> swift test 2>&amp;1 | grep Executed | tail -1
+Executed 47 tests, with 0 failures (0 unexpected) in 0.014 (0.022) seconds
+
+<span class="p">❯</span> build/render --verify
+tilt   far edge row, model / drawn   half width 60 px below it, model / drawn
+  10       86.9 /     87.0              1670.1 /   1670.0
+  30      296.8 /    297.0              1567.8 /   1568.0
+  50      543.1 /    543.0              1483.5 /   1484.0
+  70      814.6 /    815.0              1416.4 /   1417.0
+  85     1029.9 /   1030.0              1377.5 /   1378.0
+worst error 0.6 px on a 3456x2234 frame
+
+<span class="p">❯</span> </pre>
+  </div>
+
+  <div class="dock">
+    <div class="app" style="background:linear-gradient(160deg,#5ac8fa,#0a84ff)"><i style="left:16px;top:16px;width:34px;height:34px;border-radius:50%"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#ff9f7a,#ff375f)"><i style="left:14px;top:30px;width:38px;height:6px;border-radius:3px"></i><i style="left:14px;top:17px;width:26px;height:6px;border-radius:3px"></i><i style="left:14px;top:43px;width:32px;height:6px;border-radius:3px"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#9af07a,#22b34f)"><i style="left:15px;top:15px;width:36px;height:36px;border-radius:9px"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#ffe16a,#ff9f0a)"><i style="left:15px;top:32px;width:36px;height:6px;border-radius:3px"></i><i style="left:30px;top:15px;width:6px;height:36px;border-radius:3px"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#c6a2ff,#6d4aff)"><i style="left:17px;top:17px;width:0;height:0;background:none;border-left:16px solid transparent;border-right:16px solid transparent;border-bottom:30px solid rgba(255,255,255,.92)"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#3a3f4b,#14161c)"><i style="left:14px;top:18px;width:14px;height:6px;border-radius:3px;background:#6fe3a0"></i><i style="left:14px;top:32px;width:32px;height:5px;border-radius:3px;background:#8a90a0"></i><i style="left:14px;top:42px;width:24px;height:5px;border-radius:3px;background:#8a90a0"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#7af0e3,#10a5c4)"><i style="left:15px;top:15px;width:36px;height:36px;border-radius:50%;background:none;border:6px solid rgba(255,255,255,.92)"></i></div>
+    <div class="app" style="background:linear-gradient(160deg,#ffb3d1,#ff4f8b)"><i style="left:16px;top:16px;width:14px;height:34px;border-radius:5px"></i><i style="left:36px;top:26px;width:14px;height:24px;border-radius:5px"></i></div>
+  </div>
+
+<script type="text/plain" id="source">    /// Lid angle to what the overlay should do. The fold runs from `armBelow` (progress 0) to
+    /// `closedAngle` (progress 1). The overlay itself exists from `disarmAbove` down to
+    /// `minVisibleAngle`, so between `armBelow` and `disarmAbove` it shows the frozen picture
+    /// unchanged.
+    static func presentation(angle: Double, configuration: FoldConfiguration) -> FoldPresentation {
+        if angle > configuration.disarmAbove || angle < configuration.minVisibleAngle { return .hidden }
+        let span = configuration.armBelow - configuration.closedAngle
+        let tracked = min(max((configuration.armBelow - angle) / span, 0), 1)
+        let tilt = max(0, configuration.armBelow - angle)
+        return .fold(
+            progress: configuration.progressOverride ?? tracked,
+            tiltDegrees: configuration.tiltOverride ?? tilt
+        )
+    }
+
+    static func smoothstep(_ x: Double) -> Double { x * x * (3 - 2 * x) }
+
+    static func frame(
+        progress: Double,
+        tiltDegrees: Double,
+        configuration: FoldConfiguration
+    ) -> FoldFrame {
+        let motion = smoothstep(progress)
+        // Frost leads the geometry: it is the first thing the eye reads, and the fold looks empty
+        // if the picture is still crisp once the panel has visibly moved.
+        let frost = pow(progress, frostExponent)
+        let darkness = (0..<darknessStops).map { step -> Double in
+            let fromHinge = 1 - Double(step) * darknessStopSpacing
+            let gradient = max(0, min(1, (fromHinge - darknessStart) / darknessSpan))
+            return min(1, motion * pow(gradient, darknessExponent) * darknessGain)
+        }
+        return FoldFrame(
+            motion: motion,
+            frost: frost,
+            blurRadius: maxBlurRadius * frost,
+            darkness: darkness,
+            glassOpacity: glassOpacityAtFullFold * motion,
+            reflectionOpacity: reflectionOpacityAtFullFold * motion,</script>
+<script>
+  const keywords = new Set(["static","func","let","var","if","return","guard","case","enum","struct","else","in","switch"]);
+  const types = new Set(["Double","Int","FoldConfiguration","FoldPresentation","FoldFrame","UInt8","Self"]);
+  const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  const source = document.getElementById("source").textContent.replace(/^\n/, "").replace(/\n$/, "");
+  let number = 74;
+  document.getElementById("code").innerHTML = source.split("\n").map((line) => {
+    let html;
+    const comment = line.indexOf("//");
+    const body = comment >= 0 ? line.slice(0, comment) : line;
+    const tail = comment >= 0 ? `<span class="cm">${esc(line.slice(comment))}</span>` : "";
+    html = esc(body).replace(/\b[A-Za-z_][A-Za-z0-9_]*\b|\b\d+(\.\d+)?\b/g, (w) => {
+      if (keywords.has(w)) return `<span class="kw">${w}</span>`;
+      if (types.has(w)) return `<span class="ty">${w}</span>`;
+      if (/^\d/.test(w)) return `<span class="nm">${w}</span>`;
+      return w;
+    }) + tail;
+    if (/^\s*\/\/\//.test(line)) html = `<span class="cm">${esc(line)}</span>`;
+    return `<div class="line${number === 78 ? " cur" : ""}"><span class="num">${number++}</span><span>${html}</span></div>`;
+  }).join("");
+</script>
+</body>
+</html>

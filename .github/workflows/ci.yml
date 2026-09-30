@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Toolchain
+        run: swift --version
+      - name: Unit tests
+        run: swift test
+      - name: Build the app
+        run: ./build.sh
+      - name: Build the sensor spike and the offscreen renderer
+        run: |
+          ./build.sh spike
+          ./build.sh render
+      - name: Silhouette model against the real Core Animation render
+        run: build/render --verify

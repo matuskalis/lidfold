@@ -1,10 +1,21 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
+mkdir -p build
 
 if [ "${1:-}" = "spike" ]; then
     swiftc -O Tools/spike.swift -o build/spike
     echo "built build/spike"
+    exit 0
+fi
+
+if [ "${1:-}" = "render" ]; then
+    swiftc -O \
+        -target arm64-apple-macos14.0 \
+        -parse-as-library \
+        Sources/LidFoldCore/*.swift Sources/FoldOverlayView.swift Tools/render.swift \
+        -o build/render
+    echo "built build/render"
     exit 0
 fi
 
@@ -16,7 +27,7 @@ mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 swiftc -O \
     -target arm64-apple-macos14.0 \
     -parse-as-library \
-    Sources/*.swift \
+    Sources/*.swift Sources/LidFoldCore/*.swift \
     -o "$APP/Contents/MacOS/LidFold"
 
 cp Info.plist "$APP/Contents/Info.plist"

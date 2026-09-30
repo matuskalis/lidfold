@@ -6,25 +6,30 @@ import Observation
 final class LidAngleReader {
     private(set) var angle: Double?
     private(set) var isStale = true
+    let simulation = FoldConfiguration.current.simulation
 
     private var manager: IOHIDManager?
     private var device: IOHIDDevice?
     private var timer: DispatchSourceTimer?
     private let queue = DispatchQueue(label: "com.matuskalis.lidfold.sensor", qos: .userInteractive)
-    private var smoothed: Double?
-    private var lastGoodRead = Date.distantPast
-    private var tickCount = 0
+    private var filter = AngleFilter()
+    private var simulationStart = 0.0
 
     func start() {
         queue.async { [weak self] in
-            guard let self, self.device == nil else { return }
-            let opened = Self.openSensor()
-            self.manager = opened?.manager
-            self.device = opened?.device
-            NSLog("LidFold sensor open: %@", self.device != nil ? "ok" : "failed")
-            guard self.device != nil else {
-                DispatchQueue.main.async { self.isStale = true }
-                return
+            guard let self, self.timer == nil else { return }
+            if self.simulation != nil {
+                self.simulationStart = Date().timeIntervalSinceReferenceDate
+                NSLog("LidFold sensor simulated")
+            } else {
+                let opened = Self.openSensor()
+                self.manager = opened?.manager
+                self.device = opened?.device
+                NSLog("LidFold sensor open: %@", self.device != nil ? "ok" : "failed")
+                guard self.device != nil else {
+                    DispatchQueue.main.async { self.isStale = true }
+                    return
+                }
             }
             let timer = DispatchSource.makeTimerSource(queue: self.queue)
             timer.schedule(deadline: .now(), repeating: .milliseconds(16), leeway: .milliseconds(2))
@@ -35,20 +40,14 @@ final class LidAngleReader {
     }
 
     private func tick() {
-        tickCount += 1
-        if let current = smoothed, current > 90, tickCount % 6 != 0 { return }
-        let raw = device.flatMap(Self.readAngle)
-        let now = Date()
-        if let raw {
-            lastGoodRead = now
-            smoothed = smoothed.map { $0 + 0.4 * (raw - $0) } ?? raw
-        }
-        let value = smoothed
-        let stale = now.timeIntervalSince(lastGoodRead) > 0.5
+        guard filter.shouldPoll() else { return }
+        let now = Date().timeIntervalSinceReferenceDate
+        let raw = simulation.map { $0.angle(at: now - simulationStart) } ?? device.flatMap(Self.readAngle)
+        let reading = filter.ingest(raw, at: now)
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
-            self.angle = value
-            self.isStale = stale
+            self.angle = reading.angle
+            self.isStale = reading.isStale
         }
     }
 
@@ -70,10 +69,10 @@ final class LidAngleReader {
     }
 
     private static func readAngle(_ device: IOHIDDevice) -> Double? {
-        var report = [UInt8](repeating: 0, count: 3)
+        var report = [UInt8](repeating: 0, count: LidSensorReport.length)
         var length = report.count
         let result = IOHIDDeviceGetReport(device, kIOHIDReportTypeFeature, 1, &report, &length)
-        guard result == kIOReturnSuccess, length >= 3 else { return nil }
-        return Double((UInt16(report[1]) | UInt16(report[2]) << 8) & 0x1FF)
+        guard result == kIOReturnSuccess else { return nil }
+        return LidSensorReport.angle(from: Array(report.prefix(length)))
     }
 }
