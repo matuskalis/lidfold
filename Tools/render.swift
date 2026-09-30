@@ -184,87 +184,127 @@ func flatPicture(gray: CGFloat) -> CGImage {
     return context.makeImage()!
 }
 
-func luminance(_ pixels: [UInt8], width: Int, x: Int, y: Int) -> Int {
-    let offset = (y * width + x) * 4
-    return Int(pixels[offset + 1])
+func level(_ pixels: [UInt8], width: Int, x: Int, y: Int) -> Int {
+    Int(pixels[(y * width + x) * 4])
 }
 
 func percentile(_ sorted: [Double], _ fraction: Double) -> Double {
     sorted[min(sorted.count - 1, Int(Double(sorted.count) * fraction))]
 }
 
+func pixelBytes(_ image: CGImage) -> [UInt8]? {
+    let width = image.width
+    let height = image.height
+    var bytes = [UInt8](repeating: 0, count: width * height * 4)
+    guard let context = CGContext(
+        data: &bytes, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+        space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else { return nil }
+    context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+    return bytes
+}
+
+func fail(_ message: String, code: Int32 = 1) -> Never {
+    fputs(message + "\n", stderr)
+    exit(code)
+}
+
+struct Options {
+    static let switches: Set<String> = ["strip", "verify"]
+    private(set) var values: [String: String] = [:]
+    private(set) var flags: Set<String> = []
+
+    init(_ arguments: ArraySlice<String>) {
+        var remaining = arguments
+        while let argument = remaining.popFirst() {
+            guard argument.hasPrefix("--") else { continue }
+            let key = String(argument.dropFirst(2))
+            if Self.switches.contains(key) { flags.insert(key) } else if let value = remaining.popFirst() { values[key] = value }
+        }
+    }
+
+    func number(_ key: String) -> Double? { values[key].flatMap(Double.init) }
+    func numbers(_ key: String) -> [Double]? { values[key].map { $0.split(separator: ",").compactMap { Double($0) } } }
+}
+
+/// Turns a lid angle into a finished PNG: the model decides the fold, the real view draws it.
+@MainActor
+struct FrameWriter {
+    let renderer: OffscreenRenderer
+    let directory: String
+    let width: Int
+    let strip: Bool
+    let configuration = FoldConfiguration.current
+
+    func write(name: String, angle: Double) {
+        var progress = 0.0
+        var tilt = 0.0
+        var readout = "overlay off"
+        if case let .fold(foldProgress, foldTilt) = FoldModel.presentation(angle: angle, configuration: configuration) {
+            let look = FoldModel.frame(progress: foldProgress, tiltDegrees: foldTilt, configuration: configuration)
+            progress = foldProgress
+            tilt = foldTilt
+            readout = String(format: "progress %.2f   tilt %.0f°   blur %.0f pt", progress, tilt, look.blurRadius)
+        }
+        renderer.draw(progress: progress, tiltDegrees: tilt)
+        guard var image = renderer.image() else { fail("readback failed") }
+        if strip {
+            image = Readout.compose(image, angle: angle, readout: readout, width: width)
+        } else if width != renderer.pixelWidth {
+            image = Readout.scaled(image, width: width)
+        }
+        savePNG(image, to: "\(directory)/\(name).png")
+    }
+}
+
+let usage = """
+    usage: render --source <image> (--angles a,b,c | --simulate open:closed:seconds[:hold] [--seconds s] [--fps n] | --bench n)
+                  [--out dir] [--width px] [--strip]
+           render --verify
+           render --table a,b,c
+    """
+
 @main
 enum Render {
     @MainActor
     static func main() {
         _ = NSApplication.shared
-        var options: [String: String] = [:]
-        var flags: Set<String> = []
-        var arguments = CommandLine.arguments.dropFirst()
-        while let argument = arguments.popFirst() {
-            guard argument.hasPrefix("--") else { continue }
-            let key = String(argument.dropFirst(2))
-            if ["strip", "verify"].contains(key) { flags.insert(key) } else if let value = arguments.popFirst() { options[key] = value }
-        }
+        let options = Options(CommandLine.arguments.dropFirst())
+        if options.flags.contains("verify") { exit(verify() ? 0 : 1) }
+        if let angles = options.numbers("table") { table(angles: angles); return }
+        guard let source = options.values["source"].flatMap(loadImage) else { fail(usage, code: 2) }
+        guard let renderer = OffscreenRenderer(source: source) else { fail("no Metal device") }
+        if let frames = options.number("bench") { bench(renderer, frames: Int(frames)); return }
 
-        if flags.contains("verify") { exit(verify() ? 0 : 1) }
-        if let list = options["table"] { table(angles: list.split(separator: ",").compactMap { Double($0) }); return }
-        guard let sourcePath = options["source"], let source = loadImage(sourcePath) else {
-            fputs("usage: render --source <png> (--angles a,b,c | --simulate open:closed:seconds[:hold] --seconds s --fps n | --bench n) [--out dir] [--width px] [--strip]\n       render --verify\n", stderr)
-            exit(2)
-        }
-        guard let renderer = OffscreenRenderer(source: source) else { fputs("no Metal device\n", stderr); exit(1) }
-        if let count = options["bench"].flatMap(Int.init) { bench(renderer, frames: count); return }
-
-        let outputDirectory = options["out"] ?? "build/frames"
-        try? FileManager.default.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true)
-        let width = options["width"].flatMap(Int.init) ?? renderer.pixelWidth
-        let configuration = FoldConfiguration.current
-
-        func write(name: String, angle: Double) {
-            var progress = 0.0
-            var tilt = 0.0
-            var readout = "overlay off"
-            if case let .fold(foldProgress, foldTilt) = FoldModel.presentation(angle: angle, configuration: configuration) {
-                let look = FoldModel.frame(progress: foldProgress, tiltDegrees: foldTilt, configuration: configuration)
-                progress = foldProgress
-                tilt = foldTilt
-                readout = String(format: "progress %.2f   tilt %.0f°   blur %.0f pt", progress, tilt, look.blurRadius)
-            }
-            renderer.draw(progress: progress, tiltDegrees: tilt)
-            guard var image = renderer.image() else { fputs("readback failed\n", stderr); exit(1) }
-            if flags.contains("strip") {
-                image = Readout.compose(image, angle: angle, readout: readout, width: width)
-            } else if width != renderer.pixelWidth {
-                image = Readout.scaled(image, width: width)
-            }
-            savePNG(image, to: "\(outputDirectory)/\(name).png")
-        }
-
-        if let list = options["angles"] {
-            for angle in list.split(separator: ",").compactMap({ Double($0) }) {
-                write(name: String(format: "angle_%03.0f", angle), angle: angle)
-            }
-        } else if let specification = options["simulate"], let lid = AngleSimulation(specification: specification) {
-            let seconds = options["seconds"].flatMap(Double.init) ?? 6
-            let fps = options["fps"].flatMap(Double.init) ?? 20
-            var filter = AngleFilter()
-            let sensorHz = 60.0
-            var sensorTick = 0
-            for frame in 0..<Int(seconds * fps) {
-                let time = Double(frame) / fps
-                var angle = 0.0
-                while Double(sensorTick) / sensorHz <= time {
-                    let sensorTime = Double(sensorTick) / sensorHz
-                    sensorTick += 1
-                    guard filter.shouldPoll() else { continue }
-                    angle = filter.ingest(lid.angle(at: sensorTime), at: sensorTime).angle ?? angle
-                }
-                write(name: String(format: "frame_%04d", frame), angle: filter.smoothed ?? angle)
-            }
+        let directory = options.values["out"] ?? "build/frames"
+        try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        let frames = FrameWriter(
+            renderer: renderer, directory: directory,
+            width: options.number("width").map(Int.init) ?? renderer.pixelWidth, strip: options.flags.contains("strip")
+        )
+        if let angles = options.numbers("angles") {
+            for angle in angles { frames.write(name: String(format: "angle_%03.0f", angle), angle: angle) }
+        } else if let lid = options.values["simulate"].flatMap(AngleSimulation.init(specification:)) {
+            simulate(lid, seconds: options.number("seconds") ?? 6, fps: options.number("fps") ?? 20, into: frames)
         } else {
-            fputs("nothing to render: pass --angles or --simulate\n", stderr)
-            exit(2)
+            fail(usage, code: 2)
+        }
+    }
+
+    /// A scripted lid through the filter the app runs. The sensor ticks at 60 Hz, frames are taken at `fps`.
+    @MainActor
+    static func simulate(_ lid: AngleSimulation, seconds: Double, fps: Double, into frames: FrameWriter) {
+        let sensorHz = 60.0
+        var filter = AngleFilter()
+        var sensorTick = 0
+        for frame in 0..<Int(seconds * fps) {
+            let time = Double(frame) / fps
+            while Double(sensorTick) / sensorHz <= time {
+                let sensorTime = Double(sensorTick) / sensorHz
+                sensorTick += 1
+                if filter.shouldPoll() { _ = filter.ingest(lid.angle(at: sensorTime), at: sensorTime) }
+            }
+            frames.write(name: String(format: "frame_%04d", frame), angle: filter.smoothed ?? lid.angle(at: time))
         }
     }
 
@@ -272,14 +312,11 @@ enum Render {
     /// with no blur or darkening, so its edges are plain to find.
     @MainActor
     static func verify() -> Bool {
-        guard let renderer = OffscreenRenderer(source: flatPicture(gray: 0.8)) else {
-            fputs("no Metal device\n", stderr)
-            return false
-        }
+        guard let renderer = OffscreenRenderer(source: flatPicture(gray: 0.8)) else { fail("no Metal device") }
         let width = renderer.pixelWidth
         let height = renderer.pixelHeight
         let panelHeight = Double(OffscreenRenderer.panelPoints.height)
-        let lit = 100
+        let litAbove = 100
         var worst = 0.0
         print("tilt   far edge row, model / drawn   half width 60 px below it, model / drawn")
         for tilt in [10.0, 30, 50, 70, 85] {
@@ -292,9 +329,9 @@ enum Render {
             let along = (Double(probe) - farRow) / (Double(height) - farRow)
             let modelHalf = farHalf + (Double(width) / 2 - farHalf) * along
 
-            let drawnRow = (0..<height).first { luminance(pixels, width: width, x: width / 2, y: $0) > lit }.map(Double.init) ?? -1
-            let left = (0..<width).first { luminance(pixels, width: width, x: $0, y: probe) > lit } ?? 0
-            let right = (0..<width).last { luminance(pixels, width: width, x: $0, y: probe) > lit } ?? 0
+            let drawnRow = (0..<height).first { level(pixels, width: width, x: width / 2, y: $0) > litAbove }.map(Double.init) ?? -1
+            let left = (0..<width).first { level(pixels, width: width, x: $0, y: probe) > litAbove } ?? 0
+            let right = (0..<width).last { level(pixels, width: width, x: $0, y: probe) > litAbove } ?? 0
             let drawnHalf = Double(right - left + 1) / 2
             worst = max(worst, abs(drawnRow - farRow), abs(drawnHalf - modelHalf))
             print(String(format: "%4.0f   %8.1f / %8.1f            %8.1f / %8.1f", tilt, farRow, drawnRow, modelHalf, drawnHalf))
@@ -307,6 +344,7 @@ enum Render {
     @MainActor
     static func table(angles: [Double]) {
         let configuration = FoldConfiguration()
+        let panelHeight = Double(OffscreenRenderer.panelPoints.height)
         print("| Lid angle | Fold | Tilt | Blur radius | Far edge width | Far edge height |")
         print("|---|---|---|---|---|---|")
         for angle in angles {
@@ -315,21 +353,10 @@ enum Render {
                 continue
             }
             let look = FoldModel.frame(progress: progress, tiltDegrees: tilt, configuration: configuration)
-            let shape = FoldModel.silhouette(tiltDegrees: tilt, panelHeight: Double(OffscreenRenderer.panelPoints.height), configuration: configuration)
-            print(String(format: "| %.0f° | %.2f | %.1f° | %.0f pt | %.0f%% | %.0f%% |", angle, progress, tilt, look.blurRadius, shape.farEdgeWidth * 100, shape.farEdgeHeight * 100))
+            let shape = FoldModel.silhouette(tiltDegrees: tilt, panelHeight: panelHeight, configuration: configuration)
+            print(String(format: "| %.0f° | %.2f | %.1f° | %.0f pt | %.0f%% | %.0f%% |",
+                         angle, progress, tilt, look.blurRadius, shape.farEdgeWidth * 100, shape.farEdgeHeight * 100))
         }
-    }
-
-    static func pixelBytes(_ image: CGImage) -> [UInt8]? {
-        let width = image.width
-        let height = image.height
-        var bytes = [UInt8](repeating: 0, count: width * height * 4)
-        guard let context = CGContext(
-            data: &bytes, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
-            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
-        ) else { return nil }
-        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
-        return bytes
     }
 
     /// Frame cost of the real layer tree at retina size. Every frame differs from the last, otherwise
@@ -337,18 +364,20 @@ enum Render {
     @MainActor
     static func bench(_ renderer: OffscreenRenderer, frames: Int) {
         let configuration = FoldConfiguration()
-        renderer.draw(progress: 0.5, tiltDegrees: 40)
+        let fullTilt = configuration.armBelow - configuration.closedAngle
+        renderer.draw(progress: 0.5, tiltDegrees: fullTilt / 2)
         var times: [Double] = []
         for index in 0..<frames {
-            let progress = abs(Double(index % (2 * frames / 3 + 1)) / Double(frames / 3) - 1)
-            let tilt = max(0, configuration.armBelow - configuration.closedAngle) * progress
-            times.append(renderer.draw(progress: progress, tiltDegrees: tilt) * 1000)
+            let progress = 0.5 + 0.5 * sin(Double(index) * 0.1)
+            times.append(renderer.draw(progress: progress, tiltDegrees: fullTilt * progress) * 1000)
         }
         times.sort()
         print(String(format: "render %dx%d, %d frames that all differ: p50 %.2f ms  p95 %.2f ms  max %.2f ms",
                      renderer.pixelWidth, renderer.pixelHeight, frames, percentile(times, 0.5), percentile(times, 0.95), times.last!))
         var costs: [Double] = []
-        for index in 0..<frames * 10 { costs.append(renderer.updateCost(progress: Double(index % 100) / 100, tiltDegrees: 40) * 1_000_000) }
+        for index in 0..<frames * 10 {
+            costs.append(renderer.updateCost(progress: Double(index % 100) / 100, tiltDegrees: 40) * 1_000_000)
+        }
         costs.sort()
         print(String(format: "view.update on the main thread, %d calls: p50 %.0f us  p95 %.0f us  max %.0f us",
                      costs.count, percentile(costs, 0.5), percentile(costs, 0.95), costs.last!))
