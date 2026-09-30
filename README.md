@@ -150,7 +150,8 @@ other heavy work, so the tails are pessimistic.
 ## Status and limits
 
 - Verified on one machine, a MacBookPro18,1 on macOS 27.0: sensor read, all tests, the offscreen render and
-  the build.
+  the build. The tests, the builds and `build/render --verify` (0.6 px again) also pass on GitHub's macOS 15 and
+  macOS 26 runners, so the private blur filter resolves there too.
 - **Not verified in this pass:** the live overlay (ScreenCaptureKit freeze, full-screen window, real lid). It was
   last run by the author on macOS 26.5.2 on 11 Sep 2026; `docs/measurements.md` shows his log and the test
   that replays it. Running it now would cover the display and needs Screen Recording.
@@ -169,7 +170,7 @@ swift test                              # 47 tests, about 0.01 s
 The tests cover the report decode, the smoothing and its step response, the stale flag and the poll throttle,
 the angle to fold mapping (including seven lines replayed from a real close), each fold curve against values
 computed by hand, the blur mask, the silhouette, the scripted lid, and a scripted close run end to end through
-the filter and the decision. CI runs the same commands on macOS 15 and macOS 26 runners.
+the filter and the decision. CI runs the same commands on macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
 
 | Tool | What it does |
 |---|---|

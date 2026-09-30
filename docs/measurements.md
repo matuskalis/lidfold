@@ -94,3 +94,16 @@ overlay shown at angle 12.5998135296 progress 0.9084359815710844
 `FoldPresentationTests.testReproducesTheProgressLoggedDuringRealCloses` replays seven such lines through
 `FoldModel.presentation` and matches every one exactly. The fractional angles are the exponential average
 of whole-degree readings.
+
+## CI
+
+The workflow in `.github/workflows/ci.yml` passed on the pull request on both runners, running `swift test`,
+`./build.sh`, the spike and render builds and `build/render --verify`:
+
+```
+macos-15  Apple Swift 6.1.2   Executed 47 tests, with 0 failures   worst error 0.6 px on a 3456x2234 frame
+macos-26  Apple Swift 6.3.3   Executed 47 tests, with 0 failures   worst error 0.6 px on a 3456x2234 frame
+```
+
+The runners are virtual machines, so this shows that Metal and `CARenderer` are available there and that the
+private blur filter resolves. It says nothing about the sensor, which only exists on the real machine.
