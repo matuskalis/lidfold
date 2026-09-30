@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 cd "$(dirname "$0")"
+mkdir -p build
 
 if [ "${1:-}" = "spike" ]; then
     swiftc -O Tools/spike.swift -o build/spike
