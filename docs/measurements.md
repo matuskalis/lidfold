@@ -89,7 +89,7 @@ swift test          Executed 47 tests, with 0 failures (0 unexpected) in 0.014 s
 ./build.sh          10.3 s wall, build/LidFold.app, executable 217,632 bytes
 ```
 
-Mutation check, run once by hand: ten one-line mutations of the core (smoothing 0.4 to 0.5, mask
+Mutation check, run once with a throwaway script that is not in the repository: ten one-line mutations of the core (smoothing 0.4 to 0.5, mask
 0x1FF to 0xFF, poll divisor 6 to 5, stale comparison, darkness gain, disarm comparison, frost exponent,
 silhouette cosine, a tilt clamp, the simulation hold boundary). Nine were caught. The survivor changes
 `opening < 0` to `opening <= 0` in `AngleSimulation`, which returns the same value on both sides of the

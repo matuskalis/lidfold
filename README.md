@@ -16,7 +16,7 @@ timeline, so reverse the lid halfway and the fold reverses with it.
 - The fold starts below 88° and is complete at 5°. The overlay is gone above 90°, so a normal working angle
   (97° to 103° on the test machine) never triggers it.
 - Built-in display only. Nothing renders on external monitors.
-- Swift, AppKit, IOKit HID and Core Animation: 671 lines of app code, 459 of tests, no dependencies.
+- Swift, AppKit, IOKit HID and Core Animation: about 670 lines of app code, about 480 of tests, no dependencies.
 
 ## Run it
 
@@ -102,6 +102,9 @@ as a fraction of the hinge edge's width and of the panel height.
   </tr>
 </table>
 
+The four stills are the same overlay view drawn over the same generated stand-in desktop as the animation. They
+are renders, not screen captures.
+
 The model is checked against the renderer, not just against itself. `build/render --verify` swings a flat
 picture through Core Animation at five tilts and compares the far edge row and the width below it with the
 trigonometry in `FoldModel.silhouette`: worst difference 0.6 px on a 3456 x 2234 frame.
@@ -176,9 +179,9 @@ swift test                              # 47 tests, about 0.01 s
 
 The tests cover the report decode, the smoothing and its step response, the stale flag and the poll throttle,
 the angle to fold mapping (including 24 angle and progress pairs copied unchanged from the app's own log on the
-author's machine), each fold curve against values computed by hand, the blur mask, the silhouette, the scripted
-lid, and a scripted close run end to end through the filter and the decision. CI runs the same commands on
-macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
+author's machine), each fold curve against values computed independently in Python, the blur mask, the
+silhouette, the scripted lid, and a scripted close run end to end through the filter and the decision. CI runs
+the same commands on macOS 15 (Swift 6.1.2) and macOS 26 (Swift 6.3.3) runners.
 
 | Tool | What it does |
 |---|---|
