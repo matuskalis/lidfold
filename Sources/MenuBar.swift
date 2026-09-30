@@ -5,7 +5,7 @@ import ServiceManagement
 final class MenuBar: NSObject, NSMenuDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let controller: FoldController
-    private let angleItem = NSMenuItem(title: "Lid angle: —", action: nil, keyEquivalent: "")
+    private let angleItem = NSMenuItem(title: "Lid angle: n/a", action: nil, keyEquivalent: "")
     private let enabledItem = NSMenuItem(title: "Enabled", action: #selector(toggleEnabled), keyEquivalent: "")
     private let loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLogin), keyEquivalent: "")
 
