@@ -2,8 +2,8 @@
 
 Raw output of the commands the README quotes. All from one machine on 30 Sep 2026: MacBookPro18,1
 (16-inch, M1 Pro), macOS 27.0 (build 26A428), Apple Swift 6.4, lid open at 103 degrees and not touched.
-The laptop was shared with about twenty other busy processes (load average 85 to 140 during the runs), so
-treat the tails (p95, max) as pessimistic.
+The laptop was shared with other heavy work (load average 85 to 140 during the runs), so treat the tails
+(p95, max) as pessimistic.
 
 ## Sensor: `build/spike 30`
 
@@ -44,6 +44,19 @@ view.update on the main thread, 3000 calls: p50 15 us  p95 26 us  max 724 us
   vary the state reported 0.2 ms, which was meaningless.
 - `view.update` is what the app does on the main thread every 1/60 s: one `CATransaction`, a transform, a
   blur radius, six gradient colours, two opacities.
+
+## Idle cost: the app with a simulated open lid
+
+```
+LIDFOLD_SIMULATE=120:100:5 build/LidFold.app/Contents/MacOS/LidFold
+top -l 4 -s 2 -pid <pid> -stats pid,command,cpu,idlew,power
+   %CPU 0.2, 0.4, 0.6 over three 2 s samples; idle wakeups reported as 0
+```
+
+The simulated lid stays between 120 and 100 degrees, so the overlay never arms, nothing is captured, and there
+are no IOKit reads. What remains is the sensor timer (polled every sixth tick, since the lid is open) and the
+main-thread timer, which fires 60 times a second whatever the angle. `top` reported zero idle wakeups, which
+does not fit a 60 Hz timer, so read that column as unreliable and the CPU figure as the usable one.
 
 ## Fold model against the renderer: `build/render --verify`
 

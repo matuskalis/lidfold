@@ -32,7 +32,7 @@ and the ad-hoc signed app never prompts.
 
 No lid to move? `LIDFOLD_SIMULATE=100:5:3:0.5 ./run.sh` replays a scripted lid: 100° to 5° in 3 s,
 half a second of pause, and back, forever. The menu bar item says "simulated", and Ctrl-C in the terminal stops it.
-`./build.sh install` copies the app to /Applications, which "Open at Login" needs.
+`./build.sh install` stops a running copy and installs the app to /Applications.
 
 ## How it works
 
@@ -123,6 +123,12 @@ Two clocks that are not locked to each other, joined by a hand-off to the main t
   offscreen on the M1 Pro (300 frames that all differ). That fits the 16.7 ms tick with room to spare. It is
   `CARenderer` into a Metal texture, not the window server's compositor, so it measures the cost of a frame,
   not what the screen shows.
+- The 1/60 s main-thread timer runs whether or not the overlay is showing. With a simulated open lid (so no
+  overlay and no IOKit reads) `top` showed the app at 0.2 to 0.6% CPU over three 2 s samples. Starting that timer
+  only when the lid drops below 90° would save most of it. I left it alone because I could not test the live
+  overlay to check the change.
+- Neither timer is phase-locked to the display. `NSView.displayLink` (macOS 14) would tie the update to the
+  panel's refresh. I did not try it.
 - Latency is derived, not measured end to end, because that needs a lid moving at a known speed. The worst
   case from lid to layer tree is one sensor tick plus one UI tick, 18 ms + 16.7 ms, then the next compositor
   frame. The smoothing adds a steady lag of 1.5 samples (25 ms) on a moving lid.
@@ -144,7 +150,7 @@ other heavy work, so the tails are pessimistic.
    live in `Sources/LidFoldCore` with no AppKit, so the tests need no display and no lid. The cost is two build
    paths: SwiftPM builds the core for `swift test`, `build.sh` compiles the same files into the app.
 4. **Polling the sensor.** One synchronous call per tick gives a cadence that can be measured and a failure
-   that is visible. The cost is about 62 wake-ups a second while the lid is below 90°. I did not try the
+   that is visible. The cost is about 62 sensor-queue wake-ups a second while the lid is below 90°. I did not try the
    sensor's input report path.
 
 ## Status and limits
