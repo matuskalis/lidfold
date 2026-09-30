@@ -106,7 +106,7 @@ overlay shown at angle 12.5998135296 progress 0.9084359815710844
 
 `FoldPresentationTests.testReproducesTheProgressLoggedDuringRealCloses` replays seven such lines through
 `FoldModel.presentation` and matches every one exactly. The fractional angles are the exponential average
-of whole-degree readings.
+at work, not raw readings.
 
 ## CI
 
